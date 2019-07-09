@@ -1,0 +1,34 @@
+version: "3"
+
+services:
+  btc-crawler:
+    build: ./bitnodes-master
+    volumes:
+     - conf:/Users/ilvoladore/Dev/Envs/bitnodes/bitnodes-master/conf
+     - data:/Users/ilvoladore/Dev/Envs/bitnodes/bitnodes-master/data
+     - log:/Users/ilvoladore/Dev/Envs/bitnodes/bitnodes-master/log
+    networks:
+      - redis-tier
+
+  redis:
+    image: redis:alpine
+    container_name: redis_server
+    ports: "6379:6379"
+    networks:
+      - redis-tier
+
+#  worker:
+#    build:
+#      context: ./worker
+#    depends_on:
+#      - "redis"
+#    networks:
+#      - back-tier
+
+volumes:
+  conf:
+  data:
+  log:
+
+networks:
+  redis-tier:

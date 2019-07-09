@@ -1,3 +1,20 @@
+# For this project
+*.conf
+*.log
+*.out
+*.pyc
+.DS_Store
+/.idea/
+/.pytest_cache/
+/data/
+/internal-tests/
+/test-reports/
+geoip/*.mmdb
+geoip/*.txt
+rsync.sh
+
+# Mac OS X files
+*.DS_Store
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
