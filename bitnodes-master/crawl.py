@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
 # crawl.py - Greenlets-based Bitcoin network crawler.
 #
@@ -173,7 +171,7 @@ def connect(redis_conn, key):
         (peers, excluded) = enumerate_node(redis_pipe, addr_msgs, now)
         logging.debug("%s Peers: %d (Excluded: %d)",
                       conn.to_addr, peers, excluded)
-        redis_pipe.set(key, "")
+        redis_pipe.set(key, version_msg.get('version', 0))
         redis_pipe.sadd('up', key)
     conn.close()
     redis_pipe.execute()
@@ -219,18 +217,50 @@ def restart(timestamp):
 
     EDIT this; not only json dump. also export to Postgres.
     """
+    #connection to Postgres Db:
+    dbconn = psycopg2.connect(user="postgres",
+                                  password="postgres",
+                                  #host="pg_docker",
+                                  host='localhost',
+                                  port="5432",
+                                  database = "btc_crawl")
+    cursor = dbconn.cursor()
+
+
+
     redis_pipe = REDIS_CONN.pipeline()
 
     nodes = REDIS_CONN.smembers('up')  # Reachable nodes
     redis_pipe.delete('up')
 
+    # Insert all nodes in all_nodes table;
+    # Also, count them and make an insertion in master status - reachable
+    
     for node in nodes:
         (address, port, services) = node[5:].split("-", 2)
         redis_pipe.sadd('pending', (address, int(port), int(services)))
 
+        height_key = "height:{}-{}-{}".format(address, port, services)
+        height = 0
+        try:
+            height = int(REDIS_CONN.get(height_key))
+        except TypeError:
+            logging.warning("%s missing", height_key)
+            height = 0
+
+        version = redis_conn.get(node)
+        
+        cursor.execute("INSERT INTO ALL_NODES (IP_ADDRESS, PORT, SERVICES, HEIGHT, VERSION, MY_IP, BLOCKCHAIN) VALUES(%s, %s, %s, %s, %s, %s)", 
+            ( str(address), port, str(services), height, str(version), CONF['MY_IP'], CONF['BLOCKCHAIN']) )
+
+    dbconn.commit()
+    cursor.close()
+    dbconn.close()
+
     for key in get_keys(REDIS_CONN, 'node:*'):
         redis_pipe.delete(key)
 
+        
     for key in get_keys(REDIS_CONN, 'crawl:cidr:*'):
         redis_pipe.delete(key)
 
@@ -470,11 +500,38 @@ def init_conf(argv):
     """
     conf = ConfigParser()
     conf.read(argv[1])
-    CONF['logfile'] = conf.get('crawl', 'logfile')
-    CONF['magic_number'] = unhexlify(conf.get('crawl', 'magic_number'))
-    CONF['port'] = conf.getint('crawl', 'port')
+
+    '''
+        First, Choose a blockchain and the appropriate seeders.
+    '''
+    CONF['BLOCKCHAIN'] = conf.get('crawl', 'blockchain').strip()
+    if CONF['BLOCKCHAIN'] == 'Bitcoin':
+        CONF['seeders'] = conf.get('crawl', 'seeders').strip().split("\n")
+        CONF['magic_number'] = unhexlify(conf.get('crawl', 'magic_number'))
+        CONF['port'] = conf.getint('crawl', 'port')
+    elif CONF['BLOCKCHAIN'] == 'Litecoin':
+        CONF['seeders'] = conf.get('crawl', 'ltc-seeders').strip().split("\n")
+        CONF['magic_number'] = unhexlify(conf.get('crawl', 'ltc-magic_number'))
+        CONF['port'] = conf.getint('crawl', 'ltc-port')
+    elif CONF['BLOCKCHAIN'] == 'BitcoinCash':
+        CONF['seeders'] = conf.get('crawl', 'bch-seeders').strip().split("\n")
+        CONF['magic_number'] = unhexlify(conf.get('crawl', 'bch-magic_number'))
+        CONF['port'] = conf.getint('crawl', 'bch-port')
+
+    '''
+    other stuff that change per blockchain:
+        1) Magic Number (eg for LTC is fbc0b6db)
+        2) Default port
+    '''
+
+    #CONF['logfile'] = conf.get('crawl', 'logfile')
+    CONF['logfile'] = conf.get('crawl', 'logfile') + CONF['BLOCKCHAIN']+'.log'
+
+    #CONF['seeders'] = conf.get('crawl', 'seeders').strip().split("\n")
+    #CONF['magic_number'] = unhexlify(conf.get('crawl', 'magic_number'))
+    #CONF['port'] = conf.getint('crawl', 'port')
+
     CONF['db'] = conf.getint('crawl', 'db')
-    CONF['seeders'] = conf.get('crawl', 'seeders').strip().split("\n")
     CONF['workers'] = conf.getint('crawl', 'workers')
     CONF['debug'] = conf.getboolean('crawl', 'debug')
     CONF['source_address'] = conf.get('crawl', 'source_address')
@@ -520,6 +577,7 @@ def init_conf(argv):
 
     # Set to True for master process
     CONF['master'] = argv[2] == "master"
+    CONF['MY_IP'] = 'dicl15.cut.ac.cy'
 
 
 def main(argv):
