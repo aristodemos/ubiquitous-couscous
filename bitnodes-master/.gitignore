@@ -1,0 +1,13 @@
+*.conf
+*.log
+*.out
+*.pyc
+.DS_Store
+/.idea/
+/.pytest_cache/
+/data/
+/internal-tests/
+/test-reports/
+geoip/*.mmdb
+geoip/*.txt
+rsync.sh
