@@ -55,11 +55,17 @@ from protocol import (
     ProtocolError,
 )
 from utils import new_redis_conn, get_keys, ip_to_network
+import psycopg2
+from itertools import cycle
 
-#redis.connection.socket = gevent.socket
+redis.connection.socket = gevent.socket
 
 REDIS_CONN = None
 CONF = {}
+cyclingBlockchainList = cycle([])
+all_seeders_d = {}
+all_magics_d = {}
+all_ports_d = {}
 
 # MaxMind databases
 ASN = geoip2.database.Reader("geoip/GeoLite2-ASN.mmdb")
@@ -206,6 +212,22 @@ def dump(timestamp, nodes):
 
     return Counter([node[-1] for node in json_data]).most_common(1)[0][0]
 
+def test_conn():
+    print("Test PG Connection")
+    dbconn = psycopg2.connect(user="postgres",
+                                  password="postgres",
+                                  host="testpg",
+                                  #host="pg_docker",
+                                  #host='localhost',
+                                  port="5432",
+                                  database = "btc_crawl")
+    cursor = dbconn.cursor()
+    cursor.execute("select * from all_nodes limit 1")
+    row = cursor.fetchone()
+    print(row)
+    cursor.close()
+    dbconn.close()
+
 
 def restart(timestamp):
     """
@@ -220,8 +242,9 @@ def restart(timestamp):
     #connection to Postgres Db:
     dbconn = psycopg2.connect(user="postgres",
                                   password="postgres",
+                                  host="testpg",
                                   #host="pg_docker",
-                                  host='localhost',
+                                  #host='localhost',
                                   port="5432",
                                   database = "btc_crawl")
     cursor = dbconn.cursor()
@@ -248,10 +271,13 @@ def restart(timestamp):
             logging.warning("%s missing", height_key)
             height = 0
 
-        version = redis_conn.get(node)
-        
-        cursor.execute("INSERT INTO ALL_NODES (IP_ADDRESS, PORT, SERVICES, HEIGHT, VERSION, MY_IP, BLOCKCHAIN) VALUES(%s, %s, %s, %s, %s, %s)", 
+        version = REDIS_CONN.get(node)
+
+        cursor.execute("INSERT INTO ALL_NODES (IP_ADDRESS, PORT, SERVICES, HEIGHT, VERSION, MY_IP, BLOCKCHAIN) VALUES(%s, %s, %s, %s, %s, %s, %s) "
+                       "on conflict (IP_ADDRESS, PORT, services, blockchain) DO UPDATE set last_seen=excluded.last_seen, height=excluded.height, version=excluded.version",
             ( str(address), port, str(services), height, str(version), CONF['MY_IP'], CONF['BLOCKCHAIN']) )
+
+
 
     dbconn.commit()
     cursor.close()
@@ -285,6 +311,10 @@ def restart(timestamp):
     height = dump(timestamp, nodes)
     REDIS_CONN.set('height', height)
     logging.info("Height: %d", height)
+
+    CONF['BLOCKCHAIN'] = cyclingBlockchainList.next()
+    logging.info("Change Chain: %s", CONF['BLOCKCHAIN'])
+    set_bchain_params()
 
 
 def cron():
@@ -494,42 +524,67 @@ def update_excluded_networks():
                                  len(CONF['exclude_ipv6_networks']))
 
 
+def set_bchain_params():
+    #SET seeders, magic_number and port IAW current blockchain:
+
+    CONF['seeders'] = all_seeders_d[ CONF['BLOCKCHAIN'] ]
+    CONF['magic_number'] = all_magics_d[ CONF['BLOCKCHAIN'] ]
+    CONF['port'] = all_ports_d[ CONF['BLOCKCHAIN'] ]
+
+
+def load_all_chains(argv):
+    global cyclingBlockchainList
+    global all_seeders_d
+    global all_magics_d
+    global all_ports_d
+
+    conf = ConfigParser()
+    conf.read(argv[1])
+    chains_params = conf.get('crawl', 'all-chains').strip().split("\n")
+
+    all_chains_params_d = {}
+
+    for c in chains_params:
+        cparams = c.split(":")
+        all_chains_params_d[cparams[0]] = (cparams[1], cparams[2], cparams[3])
+
+    cyclingBlockchainList = cycle(all_chains_params_d.keys())
+
+    all_seeders_d = {}
+    for c in all_chains_params_d.keys():
+        all_seeders_d[c] = conf.get('crawl', all_chains_params_d[c][0]).strip().split("\n")
+
+    all_magics_d = {}
+    for c in all_chains_params_d.keys():
+        all_magics_d[c] = conf.get('crawl', all_chains_params_d[c][1]).strip()
+
+    all_ports_d = {}
+    for c in all_chains_params_d.keys():
+        all_ports_d[c] = conf.getint('crawl', all_chains_params_d[c][2])
+
+
 def init_conf(argv):
     """
     Populates CONF with key-value pairs from configuration file.
     """
+    load_all_chains(argv)
+
     conf = ConfigParser()
     conf.read(argv[1])
 
     '''
         First, Choose a blockchain and the appropriate seeders.
     '''
-    CONF['BLOCKCHAIN'] = conf.get('crawl', 'blockchain').strip()
-    if CONF['BLOCKCHAIN'] == 'Bitcoin':
-        CONF['seeders'] = conf.get('crawl', 'seeders').strip().split("\n")
-        CONF['magic_number'] = unhexlify(conf.get('crawl', 'magic_number'))
-        CONF['port'] = conf.getint('crawl', 'port')
-    elif CONF['BLOCKCHAIN'] == 'Litecoin':
-        CONF['seeders'] = conf.get('crawl', 'ltc-seeders').strip().split("\n")
-        CONF['magic_number'] = unhexlify(conf.get('crawl', 'ltc-magic_number'))
-        CONF['port'] = conf.getint('crawl', 'ltc-port')
-    elif CONF['BLOCKCHAIN'] == 'BitcoinCash':
-        CONF['seeders'] = conf.get('crawl', 'bch-seeders').strip().split("\n")
-        CONF['magic_number'] = unhexlify(conf.get('crawl', 'bch-magic_number'))
-        CONF['port'] = conf.getint('crawl', 'bch-port')
-
-    '''
-    other stuff that change per blockchain:
-        1) Magic Number (eg for LTC is fbc0b6db)
-        2) Default port
-    '''
+    #CONF['BLOCKCHAIN'] = conf.get('crawl', 'blockchain').strip()
+    CONF['BLOCKCHAIN'] = cyclingBlockchainList.next()
+    set_bchain_params()
 
     #CONF['logfile'] = conf.get('crawl', 'logfile')
     CONF['logfile'] = conf.get('crawl', 'logfile') + CONF['BLOCKCHAIN']+'.log'
 
     #CONF['seeders'] = conf.get('crawl', 'seeders').strip().split("\n")
     #CONF['magic_number'] = unhexlify(conf.get('crawl', 'magic_number'))
-    #CONF['port'] = conf.getint('crawl', 'port')
+    #c = conf.getint('crawl', 'port')
 
     CONF['db'] = conf.getint('crawl', 'db')
     CONF['workers'] = conf.getint('crawl', 'workers')
@@ -581,6 +636,8 @@ def init_conf(argv):
 
 
 def main(argv):
+    test_conn()
+
     if len(argv) < 3 or not os.path.exists(argv[1]):
         print("Usage: crawl.py [config] [master|slave]")
         return 1

@@ -7,3 +7,5 @@ PySocks==1.6.8
 pytest==3.7.3
 redis==2.10.6
 requests==2.20.0
+psycopg2-binary==2.8.3
+

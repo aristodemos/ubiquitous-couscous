@@ -1,26 +1,26 @@
-version: "3"
+version: '3.7'
 
 services:
   btc-crawler:
     build: ./bitnodes-master
-    networks:
-      - redis-tier
+    volumes:
+      - ./bitnodes-master:/bitnodes
 
   redis:
     image: redis:alpine
-    container_name: redis
-    ports: ["6379:6379"]
-    networks:
-      - redis-tier
 
-#  worker:
-#    build:
-#      context: ./worker
-#    depends_on:
-#      - "redis"
-#    networks:
-#      - back-tier
+  postgres:
+    container_name: testpg
+    environment:
+      POSTGRES_DB: btc_crawl
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    image: postgres:11.4
+    volumes:
+      - btc_crawl_data:/var/lib/postgresql/data
+#    expose:
+#      - 5432
 
-
-networks:
-  redis-tier:
+volumes:
+  btc_crawl_data:
+    external: false

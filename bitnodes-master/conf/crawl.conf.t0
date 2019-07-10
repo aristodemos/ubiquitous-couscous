@@ -145,9 +145,15 @@ crawl_dir = data/crawl/f9beb4d9
 
 #Blockchain to crawl #{Litecoin, BitcoinCash}
 blockchain = Bitcoin
+
+#List of available chains:
+all-chains =
+    Bitcoin:seeders:magic_number:port
+    Litecoin:ltc-seeders:ltc-magic_number:ltc-port
+    BitcoinCash:bch-seeders:bch-magic_number:bch-port
+
 # List of DNS seeders to get a subset of reachable nodes
 # Bitcoin's seeders are listed above; under the key 'seeders'
-
 #For Litecoin
 #Get all the details from here : https://github.com/rromanchuk/litecoin-network-crawler/blob/master/conf/crawl.conf.default
 #See also https://ltc.xblau.com
@@ -167,3 +173,7 @@ bch-seeders =
     seed.bitcoinunlimited.info
     seed.bitprim.org
     seed.deadalnix.me
+
+#https://github.com/Bitcoin-ABC/bitcoin-abc/blob/2f1adeefb67e985757cfae62b40c2edc5011b742/src/chainparams.cpp#L136
+bch-magic_number = e3e1f3e8
+bch-port = 8333

@@ -37,8 +37,8 @@ def new_redis_conn(db=0):
     """
     Returns new instance of Redis connection with the right db selected.
     """
-    socket = os.environ.get('REDIS_SOCKET', "/tmp/redis.sock")
-    password = os.environ.get('REDIS_PASSWORD', None)
+    #socket = os.environ.get('REDIS_SOCKET', "/tmp/redis.sock")
+    #password = os.environ.get('REDIS_PASSWORD', None)
     #return redis.StrictRedis(db=db, password=password, unix_socket_path=socket)
     return redis.Redis(host='redis', port=6379, db=0)
 

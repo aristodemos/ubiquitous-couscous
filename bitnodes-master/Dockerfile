@@ -12,14 +12,14 @@ RUN pip install --trusted-host pypi.python.org -r requirements.txt
 
 RUN echo "dicl15.cut.ac.cy" >> /etc/hostname
 
-RUN echo  "127.0.0.1 localhost" >> /etc/hosts
+#RUN echo  "127.0.0.1 localhost" >> /etc/hosts
 #RUN echo "[IP_ADDRESS] [HOSTNAME]" >> /etc/hosts
-RUN echo "::1 ip6-localhost ip6-loopback" >> /etc/hosts
-RUN echo "fe00::0 ip6-localnet" >> /etc/hosts
-RUN echo "ff00::0 ip6-mcastprefix" >> /etc/hosts
-RUN echo "ff02::1 ip6-allnodes" >> /etc/hosts
-RUN echo "ff02::2 ip6-allrouters" >> /etc/hosts
-RUN echo "ff02::3 ip6-allhosts" >> /etc/hosts
+#RUN echo "::1 ip6-localhost ip6-loopback" >> /etc/hosts
+#RUN echo "fe00::0 ip6-localnet" >> /etc/hosts
+#RUN echo "ff00::0 ip6-mcastprefix" >> /etc/hosts
+#RUN echo "ff02::1 ip6-allnodes" >> /etc/hosts
+#RUN echo "ff02::2 ip6-allrouters" >> /etc/hosts
+#RUN echo "ff02::3 ip6-allhosts" >> /etc/hosts
 #RUN echo "[IPV6_ADDRESS] [HOSTNAME]" >> /etc/hosts
 
 

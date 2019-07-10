@@ -1,0 +1,300 @@
+  219  docker-compose up
+  220  docker-compose up
+  221  docker ps
+  223  docker-compose up
+  230  docker ps
+  231  docker ps -a
+  232  docker start e5252614f1ce
+  233  docker ps
+  234  docker ps -a
+  235  docker start e9803e1cf73a
+  242  docker ps
+  243  docker ps -a
+  244  docker logs e9803e1cf73a
+  246  cd ..; docker-compose up
+  247  docker ps
+  249  docker ps -a
+  251  docker-compose run
+  252  docker-compose run btc-crawler python crawler.py
+  253  docker-compose run btc-crawler /bin/sh ls
+  254  docker ps
+  255  docker ps -a
+  256  docker image ls
+  257  docker ps -a
+  258  docker rmi 6dc0e6af942c
+  259  docker container rm 6ab55a2c5243
+  260  docker rmi 6dc0e6af942c
+  261  docker image ls
+  262  docker volume 
+  263  docker volume ls
+  264  docker volume prune
+  265  docker volume inspect fb6d9a3d4211fe06887a1f15e972bbd1be76f30c033ec1e017fe5c8bf5d0cd85
+  266  cd /var/lib/docker/volumes/fb6d9a3d4211fe06887a1f15e972bbd1be76f30c033ec1e017fe5c8bf5d0cd85/_data
+  267  cd /var/lib/docker/volumes/fb6d9a3d4211fe06887a1f15e972bbd1be76f30c033ec1e017fe5c8bf5d0cd85
+  268  ls /var/lib/docker
+  269  docker volume ls
+  270  docker-compose up
+  271  docker-compose up
+  272  docker-compose up --remove-orphans
+  273  docker -ps
+  274  docker ps
+  275  docker ps -a
+  276  docker rm 8e6a8e339ef7 e7dadd3752a1
+  277  docker image ls
+  278  docker-compose up
+  279  docker ps
+  280  docker ps -a
+  281  docker start 5cbdcf193569
+  282  docker ps -a
+  283  docker ps
+  284  docker stop 5cbdcf193569
+  285  docker image ls
+  286  docker rmi 41dcc3fbe3fc
+  287  docker start 86808ae00651
+  289  docker ps
+  323  docker ps
+  324  docker stop 5cbdcf193569
+  325  docker start 5cbdcf193569 -p 6379:6379
+  326  docker start --help
+  327  docker image ls
+  328  docker run --name redis_server -p 6379:6379 redis 
+  329  docker image ls
+  330  docker rmi bb0ab8a99fe6
+  331  docker ps -a
+  332  docker rm 277ca2e8ae40
+  333  docker rmi bb0ab8a99fe6
+  334  docker run --name redis_server -p 6379:6379 redis 
+  335  docker image ls
+  336  docker run --name redis_server -p 6379:6379 redis:alpine
+  337  docker ps -a
+  338  docker rm 33707b7b6b83
+  339  docker run --name redis_server -p 6379:6379 redis:alpine
+  340  docker ps
+  341  docker ps
+  346  docker ps
+  347  docker ps -a
+  348  docker image ls
+  349  docker run --name pg_docker -e POSTGRES_PASSWORD=postgres -d -p 5432:5432 -v ~/Dev/docker/volumes/postgres:/var/lib/postgresql/data --network pg_network postgres
+  350  docker ps
+  352  sudo docker exec -t btc_crawler sh -c “pg_dump -s -d btc_crawl -U postgres”
+  353  docker exec -t btc_crawler sh -c “pg_dump -s -d btc_crawl -U postgres”
+  354  @docker exec -t btc_crawler sh -c “pg_dump -s -d btc_crawl -U postgres”
+  355  docker ps
+  356  docker exec -t pg_docker sh -c “pg_dump -s -d btc_crawl -U postgres”
+  357  docker exec -t pg_docker sh -c "pg_dump -s -d btc_crawl -U postgres"
+  360  docker exec -t pg_docker sh -c "pg_dump -s -d btc_crawl -U postgres" > btc_crawl_08Jul.dump
+  368  docker ps
+  369  docker 86808ae00651 inspect
+  370  docker inspect 86808ae00651
+  371  docker image ls
+  372  docker image inspect 79db2bf18b4a 
+  373  docker ps
+  374  docker restart 86808ae00651
+  377  docker ps
+  378  docker stop 86808ae00651
+  405  docker ps
+  406  docker ps -a
+  407  docker logs 86533ef16ae3
+  408  docker logs 5cbdcf193569
+  409  docker logs b1c4b960e4f0
+  410  docker rm b1c4b960e4f0
+  411  docker ps
+  412  docker ps -a
+  413  docker ps
+  414  docker ps -a
+  415  docker start 5cbdcf193569
+  448  docker ps
+  454  docker exec -t redis_server sh -c "ls -asl /var/log/redis/"
+  455  docker exec -t redis_server sh -c "ls -asl /var/log"
+  456  docker exec -t redis_server sh -c "ls -asl /var"
+  457  docker exec -t redis_server sh -c "which redis"
+  458  docker exec -t redis_server sh -c "service redis-server status"
+  459  docker ps
+  460  docker exec -t pg_docker sh -c "pg_ctl status"
+  492  docker ps
+  501  docker ps -a
+  502  docker start efe22fdfb8d2
+  503  docker exec -t crawlerbeta_btc-crawler sh -c "ps -ef | grep 'crawl'"
+  504  docker exec -t crawlerbeta_btc-crawler_1 sh -c "ps -ef | grep 'crawl'"
+  505  docker ps
+  506  docker ps -a
+  507  #docker exec -t btc_crawler sh -c "ps -ef | grep 'crawl'"
+  508  #docker run -it --entrypoint=/bin/bash $IMAGE -i
+  509  docker image ls
+  510  docker run -it --entrypoint=/bin/bash f67482771edb -i
+  513  docker build .
+  514  docker image ls
+  515  docker run --name btc_crawler --network crawlerbeta_redis-tier e08eada51dfd
+  517  docker ps
+  518  docker ps -a
+  519  docker run -it --entrypoint=/bin/bash btc_crawler -i
+  520  docker image ls
+  521  docker rmi f67482771edb e08eada51dfd
+  522  docker ps
+  523  docker ps -a
+  524  docker rm 21caedb49bd6 f5841b5adce3 efe22fdfb8d2
+  525  docker rmi f67482771edb e08eada51dfd
+  526  docker image ls
+  527  docker build --tag=crawler_w_redis .
+  528  docker network ls
+  529  docker run --name btc_crawler --network crawlerbeta_redis-tier crawler_w_redis
+  530  docker ps
+  531  docker ps -a
+  532  docker image ls
+  533  docker runt -it --entrypoint=/bin/bash crawler_w_redis -i
+  534  docker run -it --entrypoint=/bin/bash crawler_w_redis -i
+  536  docker-compose up
+  537  docker image ls
+  538  docker run -it --entrypoint=/bin/bash 1691dbf96a1f -i
+  539  vi docker-compose.yml 
+  542  docker-compose 
+  543  docker-compose up
+  547  docker-compose up
+  548  docker image ls
+  549  docker run -it --entrypoint=/bin/bash 1691dbf96a1f -i
+  550  docker image ls
+  551  docker rmi 1691dbf96a1f f534879baed1
+  552  docker ps -a
+  553  docker rm 870f602c0377 815705985b28 7bf64c2f3042 af89dac9003b 32a5703ee8b8
+  554  docker rmi 1691dbf96a1f f534879baed1
+  555  docker image ls
+  556  docker-compose up
+  557  docker image ls
+  558  docker run -it --entrypoint=/bin/bash 67e64aa1b852 -i
+  559  docker run -it --entrypoint=/bin/bash 67e64aa1b852 -i --network crawlerbeta_redis-tier
+  560  docker run -it --entrypoint=/bin/bash 67e64aa1b852 --network crawlerbeta_redis-tier -i
+  561  #docker run -it --entrypoint=/bin/bash 67e64aa1b852 --;2;2D;2DDnetwork crawlerbeta_redis-tier -i
+  562  docker run -it --network crawlerbeta_redis-tier --entrypoint=/bin/bash 67e64aa1b852 -i
+  563  docker ps -a
+  564  docker rm 7bf0f9774e28 4fe64289f504 2997dc9abb34 8abe94312b5a
+  565  docker image ls
+  566  docker-compose up
+  567  docker ps -a
+  568  docker stop redis
+  569  docker rm redis
+  570  docker ps -a
+  571  docker image
+  572  docker image ls
+  573  docker-compose up
+  574  docker image ls
+  575  docker ps
+  576  docker ps -a
+  577  docker exec -t crawlerbeta_btc-crawler_1 sh -c "cat log/crawl.f9beb4d9.log"
+  578  docker inspect 87eee8a32d9a
+  580  cat docker-compose.yml 
+  581  vi docker-compose.yml 
+  582  docker-compose up
+  583  docker-machine ip MACHINE_VM
+  584  docker-machine ls
+  585  docker image ls
+  586  docker-compose ps
+  587  docker ps
+  588  docker ps -a
+  589  docker network ls
+  590  docker network rm composetest_default crawler_db-tier crawler_redis-tier crawlerbeta_default
+  591  docker network rm crawlerbeta_redis-tier
+  592  docker network ls
+  594  docker-compose up
+  595  docker-compose up
+  596  docker-compose up
+  597  docker-compose up
+  598  docker-compose up
+  599  docker-compose up
+  600  docker volume ls
+  601  docker volume inspect fbf959ff54de7ef52b63d68949cd89ecb72e05c511c7c23921212d40fd7c0a56
+  602  docker volume inspect fb6d9a3d4211fe06887a1f15e972bbd1be76f30c033ec1e017fe5c8bf5d0cd85
+  603  docker volume inspect d1a70553067044d7154b0e3a25f09cc86695804b18c7be519843866b91bf8312
+  604  docker ps
+  605  docker inspect 86808ae00651
+  606  docker inspect 86808ae00651 | grep volume
+  607  docker volume ls -qf dangling=true
+  608  docker volume ls -qf dangling=true | xargs -r docker volume rm
+  609  docker volume rm $(docker volume ls -qf dangling=true)
+  610  docker volume ls -qf dangling=true
+  611  docker volume ls
+  612  docker inspect 86808ae00651 | grep 934013f4d18a559303a62e913a63245741307323b6654f4e9e9d58f8d3f58a73
+  613  docker inspect 86808ae00651 | grep 356e820e39ccc91d7110bcea7f0cc7cedde39aff1157701bf4e4ffc03bd359e4
+  614  docker-compose up
+  615  docker-compose up
+  616  docker-compose up
+  617  docker-compose up
+  618  docker-compose up
+  619  docker-compose up
+  620  docker-compose up
+  621  docker ps
+  622  docker ps -a
+  623  docker-compose up
+  624  docker-compose up
+  625  docker-compose up
+  626  docker-compose --help
+  627  docker-compose build
+  628  docker-compose up
+  629  docker ps
+  634  docker ps -
+  635  docker ps -a
+  637  docker-compose build
+  638  docker-compose stop
+  639  docker-compose up
+  640  docker-compose build btc-crawler
+  641  docker-compose build btc-crawler
+  642  docker-compose --help
+  643  docker-compose stop
+  644  docker-compose up
+  645  docker-compose stop
+  646  docker-compose build btc-crawler
+  648  docker-compose up
+  649  docker-compose stop
+  650  docker start pgtest
+  651  docker ps
+  652  docker ps -a
+  653  docker start testpg
+  656  docker ps -a
+  658  docker exec -t testpg sh -c "pg_ctl status"
+  659  docker stop testpg
+  660  docker start -e POSTGRES_PASSWORD=postgres -d -p 5432:5432 testpg
+  661  docker start --help
+  662  docker volume ls
+  663  docker volume inspect 082b08c226e735d73b449faa1c6a277d0c5d0b0b2c3c7a3733e6a3306ba9a260
+  664  docker inspect pg_docker
+  665  docker inspect pg_docker | grep Binds
+  666  docker inspect testpg
+  667  docker-compose stop
+  668  docker-compose stop
+  669  docker-compose build postgres
+  670  docker-compose start postgres
+  671  docker ps
+  672  docker exec -t testpg sh -c "pwd; ls -ltr; "
+  676  docker exec -t testpg sh -c "pwd; cd home; ls -ltr; "
+  677  docker exec -t testpg sh -c "psql -U postgres "
+  678  docker exec -t testpg sh -c "psql -U postgres "
+  679  docker exec -t testpg sh -c "psql -U postgres -h localhost"
+  680  docker exec -t testpg sh -c "which psql"
+  681  docker exec -- help
+  682  docker exec -t testpg psql -c ""
+  683  docker exec -t testpg sh -c "which pg_dump "
+  684  docker exec -t testpg sh -c "pg_dump --version"
+  685  docker exec -t testpg sh -c "cd /home;  psql -U postgres -c 'CREATE DATABASE btc_crawl' "
+  686  docker exec -t testpg sh -c "cd /home;  psql -U postgres -d btc_crawl -c '\d+' "
+  687  docker exec -t testpg sh -c "cd /home; ls -asl;  psql -U postgres -f btc_crawl.dump btc_crawl  "
+  688  docker-compose stop
+  689  docker-compose start testpg
+  690  docker-compose start postgres
+  691  docker exec -t testpg sh -c "cd /home; ls -asl;"
+  692  docker exec -t testpg sh -c "psql -U postgres -c '\d+' "
+  693  docker exec -t testpg sh -c "psql -U postgres -c '\l+' "
+  694  docker exec -t testpg sh -c "psql -U postgres -d btc_crawl -c '\d+' "
+  695  docker exec -t testpg sh -c "psql -U postgres -d btc_crawl -c '\l+' "
+  696  docker-compose stop
+  697  docker-compose up
+  698  docker-compose stop
+  699  docker-compose build btc-crawler
+  700  docker-compose up
+  701  docker-compose build btc-crawler
+  702  docker-compose stop
+  703  docker-compose up
+  704  docker-compose stop
+  705  docker-compose build btc-crawler
+  706  docker-compose up
+  707  history > docker_cmds.txt
+  708  wc -l docker_cmds.txt 
+  709  history | grep docker > docker_cmds.txt
