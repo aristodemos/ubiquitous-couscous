@@ -17,7 +17,7 @@ services:
       POSTGRES_PASSWORD: postgres
     image: postgres:11.4
     volumes:
-      - ./btc_crawl.dump:/docker-entrypoint-initdb.d/init.sql
+      - ./btc_crawl.sql:/docker-entrypoint-initdb.d/init.sql
       - btc_crawl_data:/var/lib/postgresql/data
 #    expose:
 #      - 5432
