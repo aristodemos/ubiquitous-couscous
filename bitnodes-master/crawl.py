@@ -72,8 +72,11 @@ all_chains = []
 # MaxMind databases
 ASN = geoip2.database.Reader("geoip/GeoLite2-ASN.mmdb")
 
-
-def enumerate_node(redis_pipe, addr_msgs, now):
+#TODO: alter enumerate and connect methods to keep track of who-knows-who along with an RTT (round trip time) value
+# i.e SOURCE_IP | SINK_IP | SINK_PORT | TIMESTAMP | HEIGHT | BLOCKCHAIN
+# Redis key could be somethink like glinks-SOURCE_NODE_IP
+# with values all the rest
+def enumerate_node(redis_pipe, addr_msgs, now, source_ip):
     """
     Adds all peering nodes with age <= max. age into the crawl set.
     """
@@ -95,6 +98,8 @@ def enumerate_node(redis_pipe, addr_msgs, now):
                         logging.debug("Exclude: (%s, %d)", address, port)
                         excluded += 1
                         continue
+                    redis_pipe.sadd('glinks-{}-{}'.format(source_ip, CONF['BLOCKCHAIN']),
+                                    '{}-{}-{}'.format(address, port, now))
                     redis_pipe.sadd('pending', (address, port, services))
                     peers += 1
                     if peers >= CONF['peers_per_node']:
@@ -126,7 +131,8 @@ def connect(redis_conn, key):
     proxy = None
     if address.endswith(".onion"):
         proxy = CONF['tor_proxy']
-
+    #FOR RTT CALC
+    start = int(time.time())
     conn = Connection((address, int(port)),
                       (CONF['source_address'], 0),
                       magic_number=CONF['magic_number'],
@@ -176,7 +182,8 @@ def connect(redis_conn, key):
         #ARIS EDIT:
         redis_pipe.setex(height_key, version_msg.get('height', 0), CONF['max_age'], )
         now = int(time.time())
-        (peers, excluded) = enumerate_node(redis_pipe, addr_msgs, now)
+        (peers, excluded) = enumerate_node(redis_pipe, addr_msgs, now, conn.to_addr)
+
         logging.debug("%s Peers: %d (Excluded: %d)",
                       conn.to_addr, peers, excluded)
         redis_pipe.set(key, version_msg.get('version', 0))
@@ -278,11 +285,23 @@ def restart(timestamp, start, elapsed):
 
         version = REDIS_CONN.get(node)
 
-        cursor.execute("INSERT INTO ALL_NODES (IP_ADDRESS, PORT, SERVICES, HEIGHT, VERSION, MY_IP, BLOCKCHAIN) VALUES(%s, %s, %s, %s, %s, %s, %s) "
+        glinks = REDIS_CONN.smembers('glinks-{}-{}'.format(address, CONF['BLOCKCHAIN']))
+        #JUST A REMINDER:
+        #redis_pipe.sadd('glinks-{}-{}'.format(source_ip, CONF['BLOCKCHAIN']), '{}-{}-{}'.format( address, port, now))
+        for link in glinks:
+            l = link.split("-")
+            cursor.execute("INSERT INTO GRAPH_LINKS (SOURCE_IP, BLOCKCHAIN, SINK_IP, SINK_PORT, TIMESTAMP) "
+                           "VALUES (%s, %s, %s, %s, %s) "
+                           "ON CONFLICT (source_ip, blockchain, sink_ip, sink_port) "
+                           "DO UPDATE SET TIMESTAMP=EXCLUDED.TIMESTAMP", (  str(address), CONF['BLOCKCHAIN'], str(l[0]), int(l[1]), int(l[2])  ) )
+
+        redis_pipe.delete('glinks-{}-{}'.format(address, CONF['BLOCKCHAIN']))
+        cursor.execute("INSERT INTO ALL_NODES (IP_ADDRESS, PORT, SERVICES, HEIGHT, LAST_SEEN, VERSION, MY_IP, BLOCKCHAIN) VALUES(%s, %s, %s, %s, %s, %s %s, %s) "
                        "on conflict (IP_ADDRESS, PORT, services, blockchain) DO UPDATE set last_seen=excluded.last_seen, height=excluded.height, version=excluded.version",
-            ( str(address), port, str(services), height, str(version), CONF['MY_IP'], CONF['BLOCKCHAIN']) )
+            ( str(address), port, str(services), height, timestamp, str(version), CONF['MY_IP'], CONF['BLOCKCHAIN']) )
 
     dbconn.commit()
+
 
     for key in get_keys(REDIS_CONN, 'node:*'):
         redis_pipe.delete(key)
