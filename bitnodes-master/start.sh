@@ -1,9 +1,9 @@
 #!/bin/bash
 # --- bitcoin mainnet: f9beb4d9 (db = 0) ---
-python -u crawl.py conf/crawl.conf.t0 master & 
-python -u crawl.py conf/crawl.conf.t0 slave &
-python -u crawl.py conf/crawl.conf.t0 slave &
-python -u crawl.py conf/crawl.conf.t0 slave 
+python -u crawl.py conf/crawl.conf.t0 master > log/crawl.f9beb4d9.log &
+python -u crawl.py conf/crawl.conf.t0 slave > log/crawl.f9beb4d9.log &
+python -u crawl.py conf/crawl.conf.t0 slave > log/crawl.f9beb4d9.log &
+python -u crawl.py conf/crawl.conf.t0 slave > log/crawl.f9beb4d9.log 
 
 #python -u ping.py conf/ping.conf.default master > log/ping.f9beb4d9.master.out 2>&1 &
 #python -u ping.py conf/ping.conf.default slave > log/ping.f9beb4d9.slave.1.out 2>&1 &

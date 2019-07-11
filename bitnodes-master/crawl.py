@@ -67,6 +67,7 @@ all_seeders_d = {}
 all_magics_d = {}
 all_ports_d = {}
 all_versions_d = {}
+all_chains = []
 
 # MaxMind databases
 ASN = geoip2.database.Reader("geoip/GeoLite2-ASN.mmdb")
@@ -546,6 +547,7 @@ def set_bchain_params():
 
 
 def load_all_chains(argv):
+    global all_chains
     global cyclingBlockchainList
     global all_seeders_d
     global all_magics_d
@@ -564,6 +566,7 @@ def load_all_chains(argv):
         all_chains_params_d[cparams[0]] = (cparams[1], cparams[2], cparams[3], cparams[4])
 
     cyclingBlockchainList = cycle(all_chains_params_d.keys())
+    all_chains = all_chains_params_d.keys()
 
     all_seeders_d = {}
     for c in all_chains_params_d.keys():
@@ -685,10 +688,9 @@ def main(argv):
         REDIS_CONN.set('crawl:master:blockchain', CONF['BLOCKCHAIN'])
         logging.info("Removing all keys")
         redis_pipe = REDIS_CONN.pipeline()
-        #TODO: all ups become up-CLOCKCHAIN
-        for b in cyclingBlockchainList:
+        for b in all_chains:
             redis_pipe.delete('up-{}'.format(b))
-        #redis_pipe.delete('up')
+        redis_pipe.delete('up')
         for key in get_keys(REDIS_CONN, 'node:*'):
             redis_pipe.delete(key)
         for key in get_keys(REDIS_CONN, 'crawl:cidr:*'):
