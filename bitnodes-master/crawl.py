@@ -98,7 +98,7 @@ def enumerate_node(redis_pipe, addr_msgs, now, source_ip):
                         logging.debug("Exclude: (%s, %d)", address, port)
                         excluded += 1
                         continue
-                    print("Redis ---> Adding in set: "+'glinks-{}-{}'.format(source_ip[0], CONF['BLOCKCHAIN']))
+                    #print("Redis ---> Adding in set: "+'glinks-{}-{}'.format(source_ip[0], CONF['BLOCKCHAIN']))
                     redis_pipe.sadd('glinks-{}-{}'.format(source_ip[0], CONF['BLOCKCHAIN']),
                                     '{}-{}-{}'.format(address, port, now))
                     redis_pipe.sadd('pending', (address, port, services))
@@ -289,10 +289,10 @@ def restart(timestamp, start, elapsed):
         glinks = REDIS_CONN.smembers('glinks-{}-{}'.format(address, CONF['BLOCKCHAIN']))
         #JUST A REMINDER:
         #redis_pipe.sadd('glinks-{}-{}'.format(source_ip, CONF['BLOCKCHAIN']), '{}-{}-{}'.format( address, port, now))
-        print("GLINKS LEN for node %s on chain %s: %d" %(address, CONF['BLOCKCHAIN'], len(glinks)))
+        #print("GLINKS LEN for node %s on chain %s: %d" %(address, CONF['BLOCKCHAIN'], len(glinks)))
         for link in glinks:
             l = link.split("-")
-            print(l)
+            #print(l)
             cursor.execute("INSERT INTO GRAPH_LINKS (SOURCE_IP, BLOCKCHAIN, SINK_IP, SINK_PORT, TIMESTAMP) "
                            "VALUES (%s, %s, %s, %s, %s) "
                            "ON CONFLICT (source_ip, blockchain, sink_ip, sink_port) "
