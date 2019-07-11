@@ -66,6 +66,7 @@ cyclingBlockchainList = cycle([])
 all_seeders_d = {}
 all_magics_d = {}
 all_ports_d = {}
+all_versions_d = {}
 
 # MaxMind databases
 ASN = geoip2.database.Reader("geoip/GeoLite2-ASN.mmdb")
@@ -178,7 +179,8 @@ def connect(redis_conn, key):
         logging.debug("%s Peers: %d (Excluded: %d)",
                       conn.to_addr, peers, excluded)
         redis_pipe.set(key, version_msg.get('version', 0))
-        redis_pipe.sadd('up', key)
+        #redis_pipe.sadd('up', key)
+        redis_pipe.sadd('up-{}'.format(CONF['BLOCKCHAIN']), key )
     conn.close()
     redis_pipe.execute()
 
@@ -229,7 +231,7 @@ def test_conn():
     dbconn.close()
 
 
-def restart(timestamp):
+def restart(timestamp, start, elapsed):
     """
     Dumps data for the reachable nodes into a JSON file.
     Loads all reachable nodes from Redis into the crawl set.
@@ -253,8 +255,10 @@ def restart(timestamp):
 
     redis_pipe = REDIS_CONN.pipeline()
 
-    nodes = REDIS_CONN.smembers('up')  # Reachable nodes
-    redis_pipe.delete('up')
+    #nodes = REDIS_CONN.smembers('up')  # Reachable nodes
+    nodes = REDIS_CONN.smembers('up-{}'.format(CONF['BLOCKCHAIN']))
+    #redis_pipe.delete('up')
+    redis_pipe.delete('up-{}'.format(CONF['BLOCKCHAIN']))
 
     # Insert all nodes in all_nodes table;
     # Also, count them and make an insertion in master status - reachable
@@ -277,11 +281,7 @@ def restart(timestamp):
                        "on conflict (IP_ADDRESS, PORT, services, blockchain) DO UPDATE set last_seen=excluded.last_seen, height=excluded.height, version=excluded.version",
             ( str(address), port, str(services), height, str(version), CONF['MY_IP'], CONF['BLOCKCHAIN']) )
 
-
-
     dbconn.commit()
-    cursor.close()
-    dbconn.close()
 
     for key in get_keys(REDIS_CONN, 'node:*'):
         redis_pipe.delete(key)
@@ -312,9 +312,17 @@ def restart(timestamp):
     REDIS_CONN.set('height', height)
     logging.info("Height: %d", height)
 
+    cursor.execute("INSERT INTO MASTER_STATUS (STATUS, START_TIME, ELAPSED_TIME, HEIGHT, BLOCKCHAIN, REACHABLE_NODES)"
+                   "VALUES(%s, %s, %s, %s, %s, %s)", ('Finished', start, elapsed, height, CONF['BLOCKCHAIN'], reachable_nodes ))
+    dbconn.commit()
+    cursor.close()
+    dbconn.close()
+
     CONF['BLOCKCHAIN'] = cyclingBlockchainList.next()
+    REDIS_CONN.set('crawl:master:blockchain', CONF['BLOCKCHAIN'])
     logging.info("Change Chain: %s", CONF['BLOCKCHAIN'])
     set_bchain_params()
+    set_pending()
 
 
 def cron():
@@ -337,7 +345,7 @@ def cron():
             REDIS_CONN.set('elapsed', elapsed)
             logging.info("Elapsed: %d", elapsed)
             logging.info("Restarting")
-            restart(now)
+            restart(now, start, elapsed)
             while int(time.time()) - start < CONF['snapshot_delay']:
                 gevent.sleep(1)
             start = int(time.time())
@@ -355,6 +363,9 @@ def task():
 
     while True:
         if not CONF['master']:
+            if CONF['BLOCKCHAIN'] != REDIS_CONN.get('crawl:master:blockchain'):
+                CONF['BLOCKCHAIN'] = REDIS_CONN.get('crawl:master:blockchain')
+                set_bchain_params()
             while REDIS_CONN.get('crawl:master:state') != "running":
                 gevent.sleep(CONF['socket_timeout'])
 
@@ -527,9 +538,11 @@ def update_excluded_networks():
 def set_bchain_params():
     #SET seeders, magic_number and port IAW current blockchain:
 
-    CONF['seeders'] = all_seeders_d[ CONF['BLOCKCHAIN'] ]
-    CONF['magic_number'] = all_magics_d[ CONF['BLOCKCHAIN'] ]
-    CONF['port'] = all_ports_d[ CONF['BLOCKCHAIN'] ]
+    CONF['seeders'] = all_seeders_d[CONF['BLOCKCHAIN']]
+    CONF['magic_number'] = all_magics_d[CONF['BLOCKCHAIN']]
+    CONF['port'] = all_ports_d[CONF['BLOCKCHAIN']]
+    CONF['protocol_version'] = all_versions_d[CONF['BLOCKCHAIN']]
+
 
 
 def load_all_chains(argv):
@@ -537,6 +550,7 @@ def load_all_chains(argv):
     global all_seeders_d
     global all_magics_d
     global all_ports_d
+    global all_versions_d
 
     conf = ConfigParser()
     conf.read(argv[1])
@@ -546,7 +560,8 @@ def load_all_chains(argv):
 
     for c in chains_params:
         cparams = c.split(":")
-        all_chains_params_d[cparams[0]] = (cparams[1], cparams[2], cparams[3])
+        #_________________________________ seeders     magic_nums  ports       protocol_version
+        all_chains_params_d[cparams[0]] = (cparams[1], cparams[2], cparams[3], cparams[4])
 
     cyclingBlockchainList = cycle(all_chains_params_d.keys())
 
@@ -556,11 +571,15 @@ def load_all_chains(argv):
 
     all_magics_d = {}
     for c in all_chains_params_d.keys():
-        all_magics_d[c] = conf.get('crawl', all_chains_params_d[c][1]).strip()
+        all_magics_d[c] = unhexlify(conf.get('crawl', all_chains_params_d[c][1]))
 
     all_ports_d = {}
     for c in all_chains_params_d.keys():
         all_ports_d[c] = conf.getint('crawl', all_chains_params_d[c][2])
+
+    all_versions_d = {}
+    for c in all_chains_params_d.keys():
+        all_versions_d[c] = conf.getint('crawl', all_chains_params_d[c][3])
 
 
 def init_conf(argv):
@@ -579,8 +598,8 @@ def init_conf(argv):
     CONF['BLOCKCHAIN'] = cyclingBlockchainList.next()
     set_bchain_params()
 
-    #CONF['logfile'] = conf.get('crawl', 'logfile')
-    CONF['logfile'] = conf.get('crawl', 'logfile') + CONF['BLOCKCHAIN']+'.log'
+    CONF['logfile'] = conf.get('crawl', 'logfile')
+
 
     #CONF['seeders'] = conf.get('crawl', 'seeders').strip().split("\n")
     #CONF['magic_number'] = unhexlify(conf.get('crawl', 'magic_number'))
@@ -590,7 +609,7 @@ def init_conf(argv):
     CONF['workers'] = conf.getint('crawl', 'workers')
     CONF['debug'] = conf.getboolean('crawl', 'debug')
     CONF['source_address'] = conf.get('crawl', 'source_address')
-    CONF['protocol_version'] = conf.getint('crawl', 'protocol_version')
+    #CONF['protocol_version'] = conf.getint('crawl', 'protocol_version')
     CONF['user_agent'] = conf.get('crawl', 'user_agent')
     CONF['services'] = conf.getint('crawl', 'services')
     CONF['relay'] = conf.getint('crawl', 'relay')
@@ -663,9 +682,13 @@ def main(argv):
 
     if CONF['master']:
         REDIS_CONN.set('crawl:master:state', "starting")
+        REDIS_CONN.set('crawl:master:blockchain', CONF['BLOCKCHAIN'])
         logging.info("Removing all keys")
         redis_pipe = REDIS_CONN.pipeline()
-        redis_pipe.delete('up')
+        #TODO: all ups become up-CLOCKCHAIN
+        for b in cyclingBlockchainList:
+            redis_pipe.delete('up-{}'.format(b))
+        #redis_pipe.delete('up')
         for key in get_keys(REDIS_CONN, 'node:*'):
             redis_pipe.delete(key)
         for key in get_keys(REDIS_CONN, 'crawl:cidr:*'):
