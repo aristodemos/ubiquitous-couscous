@@ -125,7 +125,7 @@ def connect(redis_conn, key):
 
     (address, port, services) = key[5:].split("-", 2)
     services = int(services)
-    height = redis_conn.get('height')
+    height = redis_conn.get('height-{}'.format(CONF['BLOCKCHAIN']))
     if height:
         height = int(height)
 
@@ -178,7 +178,7 @@ def connect(redis_conn, key):
             logging.debug("%s Expected %d, got %d for services", conn.to_addr,
                           services, from_services)
             key = "node:{}-{}-{}".format(address, port, from_services)
-        height_key = "height:{}-{}-{}".format(address, port, from_services)
+        height_key = "height:{}-{}-{}-{}".format(address, port, from_services,CONF['BLOCKCHAIN'])
         #redis_pipe.setex(height_key, CONF['max_age'], version_msg.get('height', 0))
         #ARIS EDIT:
         redis_pipe.setex(height_key, version_msg.get('height', 0), CONF['max_age'], )
@@ -204,7 +204,7 @@ def dump(timestamp, nodes):
     logging.info('Building JSON data')
     for node in nodes:
         (address, port, services) = node[5:].split("-", 2)
-        height_key = "height:{}-{}-{}".format(address, port, services)
+        height_key = "height:{}-{}-{}-{}".format(address, port, services, CONF['BLOCKCHAIN'])
         try:
             height = int(REDIS_CONN.get(height_key))
         except TypeError:
@@ -276,7 +276,7 @@ def restart(timestamp, start, elapsed):
         (address, port, services) = node[5:].split("-", 2)
         redis_pipe.sadd('pending', (address, int(port), int(services)))
 
-        height_key = "height:{}-{}-{}".format(address, port, services)
+        height_key = "height:{}-{}-{}-{}".format(address, port, services, CONF['BLOCKCHAIN'])
         height = 0
         try:
             height = int(REDIS_CONN.get(height_key))
@@ -333,8 +333,8 @@ def restart(timestamp, start, elapsed):
     REDIS_CONN.lpush('nodes', (timestamp, reachable_nodes))
 
     height = dump(timestamp, nodes)
-    REDIS_CONN.set('height', height)
-    logging.info("Height: %d", height)
+    REDIS_CONN.set('height-{}'.format(CONF['BLOCKCHAIN']), height)
+    logging.info("(%s)_Height: %d" % (CONF['BLOCKCHAIN'], height) )
 
     cursor.execute("INSERT INTO MASTER_STATUS (STATUS, START_TIME, ELAPSED_TIME, HEIGHT, BLOCKCHAIN, REACHABLE_NODES)"
                    "VALUES(%s, %s, %s, %s, %s, %s)", ('Finished', start, elapsed, height, CONF['BLOCKCHAIN'], reachable_nodes ))
