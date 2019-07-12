@@ -293,15 +293,27 @@ def restart(timestamp, start, elapsed):
         for link in glinks:
             l = link.split("-")
             #print(l)
-            cursor.execute("INSERT INTO GRAPH_LINKS (SOURCE_IP, BLOCKCHAIN, SINK_IP, SINK_PORT, TIMESTAMP) "
-                           "VALUES (%s, %s, %s, %s, %s) "
-                           "ON CONFLICT (source_ip, blockchain, sink_ip, sink_port) "
-                           "DO UPDATE SET TIMESTAMP=EXCLUDED.TIMESTAMP", (  str(address), CONF['BLOCKCHAIN'], str(l[0]), int(l[1]), int(l[2])  ) )
+            cursor.execute("INSERT INTO GRAPH_LINKS "
+                           "(SOURCE_IP, SOURCE_PORT, BLOCKCHAIN, SINK_IP, SINK_PORT, FIRST_SEEN)  "
+                           "VALUES (%s, %s, %s, %s, %s, %s)  "
+                           "ON CONFLICT (source_ip, source_port, blockchain, sink_ip, sink_port)  "
+                           "DO UPDATE SET  "
+                           "last_seen=EXCLUDED.FIRST_SEEN, "
+                           "COUNTER_SEEN=COALESCE(graph_links.COUNTER_SEEN,0)+1",
+                           (  str(address), port, CONF['BLOCKCHAIN'], str(l[0]), int(l[1]), int(l[2])  ) )
         dbconn.commit()
 
         redis_pipe.delete('glinks-{}-{}'.format(address, CONF['BLOCKCHAIN']))
-        cursor.execute("INSERT INTO ALL_NODES (IP_ADDRESS, PORT, SERVICES, HEIGHT, LAST_SEEN, VERSION, MY_IP, BLOCKCHAIN) VALUES(%s, %s, %s, %s, %s, %s, %s, %s) "
-                       "on conflict (IP_ADDRESS, PORT, services, blockchain) DO UPDATE set last_seen=excluded.last_seen, height=excluded.height, version=excluded.version",
+        cursor.execute("INSERT INTO ALL_NODES "
+                       "(IP_ADDRESS, PORT, SERVICES, HEIGHT, FIRST_SEEN, VERSION, MY_IP, BLOCKCHAIN) "
+                       "VALUES(%s, %s, %s, %s, %s, %s, %s, %s) "
+                       "on conflict "
+                       "(IP_ADDRESS, PORT, services, blockchain) "
+                       "DO UPDATE set "
+                       "last_seen=excluded.FIRST_SEEN, "
+                       "height=excluded.height, "
+                       "version=excluded.version, "
+                       "COUNTER_SEEN=COALESCE(ALL_NODES.COUNTER_SEEN,0)+1",
             ( str(address), port, str(services), height, timestamp, str(version), CONF['MY_IP'], CONF['BLOCKCHAIN']) )
 
     dbconn.commit()
