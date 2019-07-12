@@ -437,10 +437,15 @@ def set_pending():
     seeders and hardcoded list of .onion nodes to bootstrap the crawler.
     """
     for seeder in CONF['seeders']:
+        if "_" in seeder:
+            (seeder_ip, seeder_port) = seeder.split("_")
+        else:
+            seeder_ip = seeder
+            seeder_port = None
         nodes = []
 
         try:
-            ipv4_nodes = socket.getaddrinfo(seeder, None, socket.AF_INET)
+            ipv4_nodes = socket.getaddrinfo(seeder_ip, seeder_port, socket.AF_INET)
         except socket.gaierror as err:
             logging.warning("%s", err)
         else:
@@ -448,19 +453,25 @@ def set_pending():
 
         if CONF['ipv6']:
             try:
-                ipv6_nodes = socket.getaddrinfo(seeder, None, socket.AF_INET6)
+                ipv6_nodes = socket.getaddrinfo(seeder_ip, seeder_port, socket.AF_INET6)
             except socket.gaierror as err:
-                logging.warning("%s", err)
+                logging.warning(" IPV6 socket.gaierror %s", err)
             else:
                 nodes.extend(ipv6_nodes)
 
         for node in nodes:
             address = node[-1][0]
+            port = node[-1][1]
             if is_excluded(address):
                 logging.debug("Exclude: %s", address)
                 continue
             logging.debug("%s: %s", seeder, address)
-            REDIS_CONN.sadd('pending', (address, CONF['port'], TO_SERVICES))
+            if port:
+                REDIS_CONN.sadd('pending', (address, port, TO_SERVICES))
+                #logging.debug("Redis pending0: %s %s, %s", address, port, TO_SERVICES)
+            else:
+                REDIS_CONN.sadd('pending', (address, CONF['port'], TO_SERVICES))
+                #logging.debug("Redis pending2: %s %s, %s", address, CONF['port'], TO_SERVICES)
 
     if CONF['onion']:
         for address in CONF['onion_nodes']:
