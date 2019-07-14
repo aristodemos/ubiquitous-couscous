@@ -149,10 +149,10 @@ blockchain = Bitcoin
 #List of available chains:
 all-chains =
 	BitcoinCash:bch-seeders:bch-magic_number:bch-port:protocol_version
-#    Bitcoin:seeders:magic_number:port:protocol_version
-#    Litecoin:ltc-seeders:ltc-magic_number:ltc-port:protocol_version
-#    BitcoinCash:bch-seeders:bch-magic_number:bch-port:protocol_version
-#    Dash:dash-seeders:dash-magic_number:dash-port:dash-protocol_version
+    	Bitcoin:seeders:magic_number:port:protocol_version
+    	Litecoin:ltc-seeders:ltc-magic_number:ltc-port:protocol_version
+    	BitcoinCash:bch-seeders:bch-magic_number:bch-port:protocol_version
+    	Dash:dash-seeders:dash-magic_number:dash-port:dash-protocol_version
 
 # List of DNS seeders to get a subset of reachable nodes
 # Bitcoin's seeders are listed above; under the key 'seeders'
