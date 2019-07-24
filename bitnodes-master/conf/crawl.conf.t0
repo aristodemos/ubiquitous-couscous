@@ -149,11 +149,12 @@ blockchain = Bitcoin
 #List of available chains:
 all-chains =
 	BitcoinCash:bch-seeders:bch-magic_number:bch-port:protocol_version
-    Bitcoin:seeders:magic_number:port:protocol_version
-    Litecoin:ltc-seeders:ltc-magic_number:ltc-port:protocol_version
-    BitcoinCash:bch-seeders:bch-magic_number:bch-port:protocol_version
-    Dash:dash-seeders:dash-magic_number:dash-port:dash-protocol_version
-    Zcash:zec-seeders:zec-magic_number:zec-port:zec-protocol_version
+  Bitcoin:seeders:magic_number:port:protocol_version
+  Litecoin:ltc-seeders:ltc-magic_number:ltc-port:protocol_version
+  BitcoinCash:bch-seeders:bch-magic_number:bch-port:protocol_version
+  Dash:dash-seeders:dash-magic_number:dash-port:dash-protocol_version
+  Zcash:zec-seeders:zec-magic_number:zec-port:zec-protocol_version
+	Dogecoin:doge-seeders:doge-magic_number:doge-port:protocol_version
 
 zec-seeders = 
 	mainnet.z.cash
@@ -164,7 +165,12 @@ zec-port = 8232
 
 zec-protocol_version = 170007
 
-
+doge-seeders = 
+		seed.multidoge.org
+		seed2.multidoge.org
+		
+doge-magic_number = c0c0c0c0
+doge-port = 22556
 
 
 
